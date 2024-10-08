@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: OpenAI-openai-agent-service
+spec:
+  selector:
+    app: OpenAI-openai-agent
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="img/openai-agent.png" />
+    <title>OpenAI openai-agent</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5dc; /* Amarillo crema */
+        }
+        #wrapper {
+            text-align: center;
+            display: none;
+            width: 90%;
+            padding: 20px; /* Añade un poco de padding para no tocar los bordes en pantallas pequeñas */
+        }
+        #desc {
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px; /* Añade un poco de padding para no tocar los bordes en pantallas pequeñas */
+        }
+
+        /* Establece el estilo para el contenedor padre (ejemplo) */
+        #chatContainer {
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Altura completa del viewport */
+            padding: 20px; /* Añade un poco de padding alrededor */
+        }
+
+
+        #chatBox {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0; /* Ajustado para mantener consistencia en todos los lados */
+            overflow-y: auto; /* Mantiene la capacidad de desplazamiento */
+            background-color: rgba(255, 255, 255, 0.5); /* Fondo semi-transparente */
+            width: calc(100% - 20px); /* Ajuste por el padding, asumiendo padding horizontal de 10px */
+            max-height: 50vh; /* Altura máxima del chatBox como un porcentaje de la altura de la ventana */
+            border-radius: 20px; /* Bordes redondeados */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Sombra ligera para profundidad */
+            display: none;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 80px;
+            margin-bottom: 20px;
+            border: 2px solid black; /* Añade un borde negro */
+        }
+
+        .message {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .user-message {
+            justify-content: space-between;
+            display: flex;
+            width: 100%;
+            background-color: #f0f0f0; /* Fondo gris muy sutil */
+            padding: 10px; /* Añade algo de relleno para mejor legibilidad */
+            border-radius: 10px; /* Bordes redondeados para un look suavizado */
+            margin-bottom: 10px; /* Espacio entre mensajes */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Opcional: una sombra ligera para profundidad */
+        }
+
+        .chatbot-message {
+            justify-content: space-between;
+            display: flex;
+            width: 100%;
+            /* Aquí puedes mantener o ajustar los estilos específicos para los mensajes del chatbot */
+        }
+
+        input[type="text"], button {
+            width: calc(100% - 20px); /* Ajusta el ancho para considerar el padding */
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            cursor: pointer;
+            width: auto;
+            padding: 10px 20px;
+        }
+        @media (max-width: 600px) {
+            .avatar, .chatbot-avatar {
+                width: 30px; /* Hace los avatares más pequeños en pantallas pequeñas */
+                height: 30px;
+            }
+            #wrapper {
+                padding: 10px; /* Menos padding en pantallas pequeñas */
+            }
+            .message p {
+                font-size: 14px; /* Texto más pequeño para que quepa mejor */
+            }
+        }
+
+        #messageBox {
+            display: flex;
+            align-items: center;
+            position: relative;
+            width: calc(100% - 20px);
+        }
+
+        #userMessage {
+            flex-grow: 1;
+            padding-right: 40px; /* Espacio para el botón de enviar, ajusta según necesidad */
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.5); /* Semi-transparente */
+            width: calc(100% - 20px); /* Ajusta este valor según necesites */
+            height: auto; /* Permite que el campo se ajuste al contenido */
+            overflow-y: auto; /* Habilita el desplazamiento vertical si es necesario */
+            resize: vertical; /* Permite al usuario redimensionar el textarea verticalmente. Cambia a 'none' si no deseas redimensionamiento */
+            box-sizing: border-box; /* Asegura que padding y border estén incluidos en el ancho y alto total */
+        }
+
+
+        #sendButton {
+            position: absolute;
+            right: 5px;
+            border: none;
+            background-color: transparent; /* Fondo transparente */
+            cursor: pointer;
+        }
+
+        #loading {
+            position: absolute;
+            right: 20px;
+            top: 5px;
+        }
+
+        #startButton {
+            background-color: #4CAF50; /* Color de fondo verde */
+            color: white; /* Texto en color blanco */
+            padding: 10px 20px; /* Padding para hacer el botón más grande */
+            border: none; /* Eliminar el borde */
+            border-radius: 5px; /* Bordes redondeados */
+            cursor: pointer; /* Cambiar el cursor a un puntero */
+            font-size: 16px; /* Tamaño de fuente más grande */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra suave para dar profundidad */
+            transition: background-color 0.3s, box-shadow 0.3s; /* Transición suave para hover */
+        }
+
+        #startButton:hover {
+            background-color: #45a049; /* Color más oscuro al pasar el mouse */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada para el efecto hover */
+        }
+
+        #startButton i {
+            margin-right: 5px; /* Espacio entre el icono y el texto */
+        }
+
+        #chatBox div {
+            display: block; /* Asegura que el div se trate como un bloque */
+            width: 100%; /* Opcional: Hace que cada div ocupe todo el ancho disponible */
+            text-align: justify; /* Justifica el texto a ambos lados */
+        }
+
+
+    </style>
+</head>
+<body>
+    <div id="chatContainer">
+        <center>
+            <div id="desc">
+                <img src="/static/img/openai-agent.png" class="avatar">
+                <p>Soy openai-agent, tu guía ninja en OpenAI, inspirado en las marionetas de Naruto. Te acompaño en cada detalle del proyecto, ofreciendo información precisa y relevante. ¿Dudas? Pregunta y hagamos que tu experiencia sea eficiente y enriquecedora. ¡Iniciemos la misión!</p>
+            </div>
+        </center>
+        <button id="startButton" onclick="startChat()"><i class="fas fa-comments"></i> Nuevo Chat</button>
+        <div id="wrapper">
+            <div id="chatBox"></div>
+            <div id="messageBox">
+                <textarea id="userMessage" placeholder="Escribe tu pregunta aquí..." rows="4"></textarea>
+                <button onclick="sendMessage()" id="sendButton"><i class="fas fa-paper-plane"></i></button>
+                <div id="loading" style="display:none;"><i class="fas fa-spinner fa-spin"></i></div>
+            </div>
+            <button id="startButton" onclick="startChat()"><i class="fas fa-comments"></i> Nuevo Chat</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        let threadId = null;
+
+        async function startChat() {
+            document.getElementById('chatBox').style.display = 'none'; // Muestra el icono de carga
+            document.getElementById('wrapper').style.display = 'block';
+            document.getElementById('desc').style.display = 'block';
+            document.getElementById('startButton').style.display = 'none';
+            const response = await fetch('/start_chat', {method: 'POST'});
+            const data = await response.json();
+            threadId = data.thread_id;
+            document.getElementById('chatBox').innerHTML = ''; // Limpiar el chatBox para un nuevo chat
+            document.getElementById('userMessage').value = ''; // Limpia el campo de entrada
+            document.getElementById('userMessage').focus(); // Pone el foco en el input
+        }
+
+        async function sendMessage() {
+            document.getElementById('loading').style.display = 'block'; // Muestra el icono de carga
+            document.getElementById('userMessage').disabled = true; // Deshabilita el input
+            document.getElementById('sendButton').disabled = true; // Deshabilita el botón enviar
+
+            const content = document.getElementById('userMessage').value;
+            if (!content) return; // No enviar mensajes vacíos
+
+            const response = await fetch('/send_message', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({content: content}),
+            });
+            const data = await response.json();
+
+            if (data.response) {
+                document.getElementById('chatBox').style.display = 'block';
+                let chatBox = document.getElementById('chatBox');
+                let userMessage = document.createElement('div');
+                userMessage.className = 'message user-message';
+                userMessage.innerHTML = `<p><b>Tú:</b> ${content}</p>`;
+                let botName = document.createElement('div');
+                botName.innerHTML =  `<p><b>openai-agent:</b></p>`;
+                botName.className = 'message chatbot-message';
+
+                let botMessage = document.createElement('div');
+                botMessage.className = 'message chatbot-message';
+                let responseHTML = marked.parse(data.response);
+
+                // Crea un contenedor temporal para el HTML
+                let tempDiv = document.createElement('div');
+                tempDiv.innerHTML = responseHTML;
+
+                // Crea un nuevo fragmento de documento para almacenar los divs
+                let fragment = document.createDocumentFragment();
+
+                // Itera sobre los elementos de nivel superior en tempDiv
+                Array.from(tempDiv.childNodes).forEach(child => {
+                    // Crea un nuevo div para envolver el elemento
+                    let wrapperDiv = document.createElement('div');
+                    // Asegúrate de que el child sea un elemento y no un nodo de texto u otro tipo
+                    if (child.nodeType === Node.ELEMENT_NODE) {
+                        wrapperDiv.appendChild(child.cloneNode(true)); // Clona y envuelve el elemento
+                        fragment.appendChild(wrapperDiv); // Añade el nuevo div al fragmento
+                    }
+                });
+
+                // Añade un icono de copia al final de la respuesta del bot
+                let copyIcon = document.createElement('i');
+                copyIcon.className = 'fas fa-copy'; // Clase de FontAwesome para el icono de copiar
+                copyIcon.style.cursor = 'pointer';
+                copyIcon.style.marginLeft = '5px'; // Ajusta según necesites
+
+                // Función para copiar el texto al portapapeles
+                copyIcon.onclick = function() {
+                    navigator.clipboard.writeText(tempDiv.innerText).then(() => {
+                        // Opcional: Mostrar alguna notificación de que el texto fue copiado.
+                        console.log('Texto copiado al portapapeles');
+                    }).catch(err => {
+                        console.error('Error al copiar el texto: ', err);
+                    });
+                };
+
+                // Agrega el icono de copia al fragmento antes de añadirlo al botMessage
+                fragment.appendChild(copyIcon);
+
+                botMessage.appendChild(fragment);
+
+                chatBox.appendChild(userMessage);
+                chatBox.appendChild(botName);
+                chatBox.appendChild(botMessage);
+                document.getElementById('userMessage').value = ''; // Limpia el campo de entrada
+                chatBox.scrollTop = chatBox.scrollHeight; // Desplaza hacia el último mensaje
+
+                document.getElementById('loading').style.display = 'none'; // Oculta el icono de carga
+                document.getElementById('userMessage').disabled = false; // Habilita el input
+                document.getElementById('sendButton').disabled = false; // Habilita el botón enviar
+                document.getElementById('userMessage').value = ''; // Limpia el campo de entrada
+                document.getElementById('userMessage').focus(); // Pone el foco en el input
+            }
+        }
+    </script>
+</body>
+</html>

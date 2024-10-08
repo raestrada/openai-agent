@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "OpenAI-openai-agent"
+version = "0.1.0"
+description = "Descripción breve de tu proyecto"
+authors = ["Tu Nombre <tu.email@example.com>"]
+readme = "README.md"
+packages = [{include = "*", from="src"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+# Aquí añades las dependencias que tenías en `requirements.txt`
+# Ejemplo:
+flask = "^2.3.0"
+openai = "^1.42.0"
+python-dotenv = "^1.0.1"
+
+[tool.poetry.dev-dependencies]
+# Aquí puedes añadir dependencias de desarrollo, si las tienes
+pytest = "^7.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

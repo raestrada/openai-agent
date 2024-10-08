@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: OpenAI-openai-agent-deployment
+  labels:
+    app: OpenAI-openai-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: OpenAI-openai-agent
+  template:
+    metadata:
+      labels:
+        app: OpenAI-openai-agent
+    spec:
+      containers:
+      - name: OpenAI-openai-agent
+        image: us.gcr.io/cencosudx/OpenAI/openai-agent:3
+        ports:
+        - containerPort: 8000
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-agent
+              key: OPENAI_API_KEY
